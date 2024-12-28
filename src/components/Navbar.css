@@ -1,0 +1,42 @@
+.custom-navbar {
+  box-shadow: 0 2px 4px rgba(0,0,0,.1);
+}
+
+.brand-text {
+  font-weight: 600;
+  font-size: 1.3rem;
+  background: linear-gradient(45deg, #00ff88, #00ffee);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.navbar-nav .nav-link {
+  margin: 0 10px;
+  position: relative;
+  padding: 8px 0;
+}
+
+.navbar-nav .nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: #00ff88;
+  transition: width 0.3s ease;
+}
+
+.navbar-nav .nav-link:hover::after,
+.navbar-nav .nav-link.active::after {
+  width: 100%;
+}
+
+.navbar-toggler {
+  border: none;
+  padding: 0.5rem;
+}
+
+.navbar-toggler:focus {
+  box-shadow: none;
+} 
