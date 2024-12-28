@@ -37,7 +37,6 @@ const SecretForm = () => {
       if (response.status === 400) {
         setError('Bu anahtar için kayıtlı bir gizli bilgi bulunamadı.');
         setFormData(prev => ({ ...prev, secret: '' }));
-        setHasExistingSecret(false);
         return;
       }
 
@@ -48,7 +47,7 @@ const SecretForm = () => {
       const data = await response.json();
       if (data.password) {
         setTempSecretData(data);
-        setIsPasswordCheck(true);
+        setIsPasswordCheck(false);
         setShowPasswordModal(true);
         setHasExistingSecret(true);
         setError(null);
@@ -56,7 +55,6 @@ const SecretForm = () => {
     } catch (err) {
       console.error('Veri getirme hatası:', err);
       setError('Gizli bilgi kontrol edilirken bir hata oluştu.');
-      setHasExistingSecret(false);
     }
   };
 
@@ -152,13 +150,32 @@ const SecretForm = () => {
   };
 
   const handlePasswordCheck = () => {
-    if (tempSecretData?.password === password) {
-      setFormData(prev => ({ ...prev, secret: tempSecretData.secret }));
-      setShowPasswordModal(false);
-      setPassword('');
-      setError(null);
+    if (isPasswordCheck) {
+      // Silme işlemi için şifre kontrolü
+      if (tempSecretData?.password === password) {
+        handleDelete();
+        setShowPasswordModal(false);
+        setPassword('');
+        setError(null);
+      } else {
+        setError('Yanlış şifre!');
+      }
     } else {
-      setError('Yanlış şifre!');
+      // Görüntüleme için şifre kontrolü
+      if (tempSecretData?.password) {
+        if (tempSecretData.password === password) {
+          // Şifre doğruysa veriyi göster
+          setFormData(prev => ({ ...prev, secret: tempSecretData.secret }));
+          setShowPasswordModal(false);
+          setPassword('');
+          setError(null);
+        } else {
+          setError('Yanlış şifre!');
+        }
+      } else {
+        // Yeni kayıt
+        handlePasswordSubmit();
+      }
     }
   };
 
@@ -200,9 +217,10 @@ const SecretForm = () => {
     setShowDeleteModal(false);
   };
 
-  const handleDeleteConfirm = async () => {
+  const handleDeleteConfirm = () => {
     setShowDeleteModal(false);
-    await handleDelete();
+    setIsPasswordCheck(true);
+    setShowPasswordModal(true);
   };
 
   return (
@@ -284,14 +302,14 @@ const SecretForm = () => {
           <Modal.Title>Silme Onayı</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          Bu gizli bilgiyi silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.
+          Bu gizli bilgiyi silmek istediğinizden emin misiniz? Silme işlemi için şifrenizi girmeniz gerekecektir.
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={handleDeleteCancel}>
             İptal
           </Button>
           <Button variant="danger" onClick={handleDeleteConfirm}>
-            Sil
+            Devam Et
           </Button>
         </Modal.Footer>
       </Modal>
@@ -300,16 +318,25 @@ const SecretForm = () => {
         setShowPasswordModal(false);
         setPassword('');
         setError(null);
+        setIsPasswordCheck(false);
       }}>
         <Modal.Header closeButton>
           <Modal.Title>
-            {isPasswordCheck ? 'Şifre Kontrolü' : 'Şifre Belirleme'}
+            {isPasswordCheck 
+              ? 'Silme İşlemi için Şifre Kontrolü' 
+              : tempSecretData?.password 
+                ? 'Şifre Kontrolü'
+                : 'Şifre Belirleme'}
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Form.Group>
             <Form.Label>
-              {isPasswordCheck ? 'Gizli bilgiyi görüntülemek için şifreyi girin' : 'Gizli bilgi için bir şifre belirleyin'}
+              {isPasswordCheck 
+                ? 'Silme işlemini onaylamak için şifrenizi girin'
+                : tempSecretData?.password
+                  ? 'Gizli bilgiyi görüntülemek için şifrenizi girin'
+                  : 'Gizli bilgi için bir şifre belirleyin'}
             </Form.Label>
             <Form.Control
               type="password"
@@ -329,15 +356,20 @@ const SecretForm = () => {
             setShowPasswordModal(false);
             setPassword('');
             setError(null);
+            setIsPasswordCheck(false);
           }}>
             İptal
           </Button>
           <Button 
             variant="primary" 
-            onClick={isPasswordCheck ? handlePasswordCheck : handlePasswordSubmit}
+            onClick={handlePasswordCheck}
             disabled={!password.trim()}
           >
-            {isPasswordCheck ? 'Kontrol Et' : 'Kaydet'}
+            {isPasswordCheck 
+              ? 'Onayla' 
+              : tempSecretData?.password
+                ? 'Kontrol Et'
+                : 'Kaydet'}
           </Button>
         </Modal.Footer>
       </Modal>
